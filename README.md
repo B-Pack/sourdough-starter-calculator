@@ -1,8 +1,8 @@
-# 🍞 Sourdough Companion v5.1
+# 🍞 Sourdough Companion v5.3
 
 A mobile-friendly sourdough starter calculator, peak-time planning tool, and offline-first starter logbook. The app is a single `index.html` file designed for free hosting on GitHub Pages.
 
-## Version 5.1 changes
+## Version 5.2 + 5.3 combined changes
 
 - Removed the difficult-to-measure rise multiplier from the logbook and anonymous contribution schema.
 - Added separate flour choices for bleached all-purpose and unbleached all-purpose flour.
@@ -36,6 +36,7 @@ Contains three tabs:
 - **Peak Estimator** provides a timing range using ratio, hydration, temperature, flour, starter condition, and nearby community observations.
 - **Feed Scheduler** works backward from the desired ready time.
 - **Starter Logbook** stores observations locally and can optionally contribute starter-only data to Firestore.
+- **Community Insights** displays sample totals, common ratios and hydration levels, and average peak timing by flour and temperature.
 
 ## Flour categories
 
@@ -127,3 +128,21 @@ sourdough-companion/
 ## Disclaimer
 
 Peak timing is an estimate. Starter culture, feeding history, actual dough temperature, flour, hydration, and environmental changes all affect fermentation. Check starter expansion, bubbles, aroma, and the shape of the surface before use.
+
+
+### Community statistics
+
+Version 5.3 expects trusted aggregate documents in `communityStatistics` with `flourRatio`, `waterRatio`, `hydration`, `temperatureBucket`, `flour`, `samples`, `averagePeak`, and `standardDeviation`. Anonymous browsers should have read-only access to this collection. Aggregates should be produced by a trusted backend or administrator process, not by the public web app.
+
+### Data quality limits
+
+Uploads are rejected when peak time is outside 1–72 hours, hydration is outside 20–300%, temperature is outside 0–50°C, or either feed ratio is not positive.
+
+### V5.3 tests
+
+- Test every preset in each ratio-aware tool.
+- Disable symmetrical mode and verify an advanced ratio such as 1:5:3.
+- Add multiple local observations and verify Personal Starter Profile statistics.
+- Verify predictions show personal, community, and generic weighting.
+- Add an aggregate document and verify Community Insights.
+- Test invalid observations at every validation boundary.
