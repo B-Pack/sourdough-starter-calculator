@@ -4,238 +4,103 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#6f7759">
-  <title>Sourdough Companion</title>
+  <title>Sourdough Companion v5</title>
   <style>
-    :root {
-      --bg: #f5f1e8; --surface: #fffdf8; --surface-2: #eef1e7; --text: #292d26;
-      --muted: #667064; --accent: #6f7759; --accent-2: #566043; --border: #d8d8ce;
-      --danger: #a84845; --shadow: 0 10px 30px rgba(54,58,45,.10); --auto: #e5edda;
-    }
-    html[data-theme="dark"] {
-      --bg: #191c18; --surface: #252923; --surface-2: #30362c; --text: #f1f3ec;
-      --muted: #b4bbaa; --accent: #9aa77c; --accent-2: #b2bf92; --border: #444b40;
-      --danger: #cf7773; --shadow: 0 10px 30px rgba(0,0,0,.30); --auto: #3b4634;
-    }
-    * { box-sizing: border-box; }
-    body { margin: 0; background: var(--bg); color: var(--text); font-family: system-ui,-apple-system,"Segoe UI",sans-serif; }
-    button,input,select,textarea { font: inherit; }
-    button { touch-action: manipulation; }
-    .topbar { position: sticky; top: 0; z-index: 20; display: grid; grid-template-columns: 48px 1fr auto; align-items: center; gap: 10px; min-height: 68px; padding: 10px max(14px,env(safe-area-inset-right)) 10px max(14px,env(safe-area-inset-left)); background: color-mix(in srgb,var(--surface) 94%,transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
-    .topbar h1 { margin: 0; font-size: clamp(1.08rem,4vw,1.45rem); text-align: center; }
-    .icon-btn,.theme-btn,.btn,.tab { border: 0; border-radius: 10px; cursor: pointer; font-weight: 700; }
-    .icon-btn { width: 44px; height: 44px; background: var(--surface-2); color: var(--text); font-size: 1.35rem; }
-    .theme-btn { min-height: 44px; padding: 0 12px; background: var(--accent); color: white; }
-    .drawer { position: fixed; inset: 0 auto 0 0; z-index: 50; width: min(86vw,330px); padding: max(18px,env(safe-area-inset-top)) 16px 18px; background: var(--surface); box-shadow: var(--shadow); transform: translateX(-105%); transition: transform .22s ease; }
-    .drawer.open { transform: translateX(0); }
-    .backdrop { display: none; position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.45); }
-    .backdrop.open { display: block; }
-    .drawer-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
-    .nav-btn { width:100%; text-align:left; padding:14px; margin:5px 0; border:1px solid var(--border); border-radius:10px; background:var(--surface); color:var(--text); cursor:pointer; }
-    .nav-btn.active { color:white; background:var(--accent); border-color:var(--accent); }
-    main { width:min(100% - 24px,1000px); margin:22px auto 50px; }
-    .page { display:none; }
-    .page.active { display:block; }
-    .card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:clamp(16px,4vw,24px); box-shadow:var(--shadow); }
-    .intro { color:var(--muted); margin-top:4px; }
-    .tabs { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin:18px 0; }
-    .tab { min-height:46px; padding:9px; background:var(--surface-2); color:var(--text); }
-    .tab.active { background:var(--accent); color:white; }
-    .grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
-    @media(max-width:720px){ .grid{grid-template-columns:1fr}.tabs{font-size:.86rem}.theme-label{display:none}.topbar{grid-template-columns:48px 1fr 48px}.theme-btn{width:44px;padding:0}.topbar h1{font-size:1.08rem} }
-    .field { margin:13px 0; transition:opacity .2s ease,filter .2s ease; }
-    .field label { display:flex; justify-content:space-between; gap:10px; margin-bottom:6px; font-weight:750; }
-    .badge { font-size:.72rem; color:var(--accent-2); }
-    input,select,textarea { width:100%; min-height:48px; padding:11px 12px; border:1px solid var(--border); border-radius:9px; color:var(--text); background:var(--surface); }
-    textarea { min-height:88px; resize:vertical; }
-    .field.computed { opacity:.60; }
-    .field.computed input { background:var(--auto); font-weight:750; }
-    .results { padding:16px; border-radius:12px; background:var(--surface-2); }
-    .result-row { display:flex; justify-content:space-between; gap:15px; padding:7px 0; }
-    .result-row strong { text-align:right; }
-    .big-result { font-size:clamp(1.4rem,6vw,2.3rem); color:var(--accent-2); font-weight:800; }
-    .actions { display:flex; flex-wrap:wrap; gap:9px; margin-top:16px; }
-    .btn { min-height:46px; padding:11px 16px; background:var(--accent); color:white; }
-    .btn.secondary { background:var(--surface-2); color:var(--text); border:1px solid var(--border); }
-    .btn.danger { background:var(--danger); }
-    .notice { padding:13px; border-left:4px solid var(--accent); border-radius:8px; background:var(--surface-2); color:var(--muted); }
-    .warning { border-left-color:#c18222; }
-    .error { color:var(--danger); min-height:1.3em; font-weight:650; }
-    .timeline { display:grid; grid-template-columns:repeat(4,1fr); gap:5px; margin-top:16px; }
-    .timeline div { padding:12px 6px; text-align:center; border-radius:8px; background:var(--surface-2); font-size:.82rem; }
-    table { width:100%; border-collapse:collapse; }
-    th,td { text-align:left; padding:10px 7px; border-bottom:1px solid var(--border); vertical-align:top; }
-    .table-wrap { overflow:auto; }
-    details { margin-top:16px; }
-    a { color:var(--accent-2); }
-    .hidden { display:none !important; }
+    :root{--bg:#f5f1e8;--surface:#fffdf8;--surface2:#edf0e7;--text:#292d26;--muted:#687064;--accent:#6f7759;--accent2:#566043;--border:#d7d8ce;--danger:#a84845;--ok:#39724b;--warn:#a56b17;--auto:#e4ecd8;--shadow:0 10px 30px rgba(54,58,45,.10)}
+    html[data-theme="dark"]{--bg:#191c18;--surface:#252923;--surface2:#30362c;--text:#f1f3ec;--muted:#b4bbaa;--accent:#929f76;--accent2:#becb9c;--border:#444b40;--danger:#d2736f;--ok:#78b98a;--warn:#e0a84f;--auto:#3b4634;--shadow:0 10px 30px rgba(0,0,0,.3)}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif} button,input,select,textarea{font:inherit} button{touch-action:manipulation}
+    .topbar{position:sticky;top:0;z-index:30;display:grid;grid-template-columns:48px 1fr auto;align-items:center;gap:10px;min-height:68px;padding:10px max(14px,env(safe-area-inset-right)) 10px max(14px,env(safe-area-inset-left));background:color-mix(in srgb,var(--surface) 94%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+    .topbar h1{margin:0;text-align:center;font-size:clamp(1.05rem,4vw,1.45rem)} .icon-btn,.theme-btn,.btn,.tab{border:0;border-radius:10px;cursor:pointer;font-weight:750}.icon-btn{width:44px;height:44px;background:var(--surface2);color:var(--text);font-size:1.35rem}.theme-btn{min-height:44px;padding:0 12px;background:var(--accent);color:#fff}
+    .drawer{position:fixed;inset:0 auto 0 0;z-index:60;width:min(86vw,330px);padding:max(18px,env(safe-area-inset-top)) 16px 18px;background:var(--surface);box-shadow:var(--shadow);transform:translateX(-105%);transition:.22s ease}.drawer.open{transform:translateX(0)}.backdrop{display:none;position:fixed;inset:0;z-index:50;background:#0007}.backdrop.open{display:block}.drawer-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.nav-btn{width:100%;text-align:left;padding:14px;margin:5px 0;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);cursor:pointer}.nav-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+    main{width:min(100% - 24px,1050px);margin:22px auto 50px}.page{display:none}.page.active{display:block}.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:clamp(16px,4vw,24px);box-shadow:var(--shadow)}.intro{color:var(--muted);margin-top:4px}.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:18px 0}.tab{min-height:48px;padding:9px;background:var(--surface2);color:var(--text)}.tab.active{background:var(--accent);color:#fff}.panel{display:none}.panel.active{display:block}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.field{margin:13px 0;transition:opacity .2s}.field label{display:flex;justify-content:space-between;gap:10px;margin-bottom:6px;font-weight:750}.badge{font-size:.72rem;color:var(--accent2)}input,select,textarea{width:100%;min-height:48px;padding:11px 12px;border:1px solid var(--border);border-radius:9px;color:var(--text);background:var(--surface)}textarea{min-height:88px}.field.computed{opacity:.58}.field.computed input{background:var(--auto);font-weight:750}.results{padding:16px;border-radius:12px;background:var(--surface2)}.result-row{display:flex;justify-content:space-between;gap:14px;padding:7px 0}.result-row strong{text-align:right}.big{font-size:clamp(1.4rem,6vw,2.25rem);color:var(--accent2);font-weight:850}.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:16px}.btn{min-height:46px;padding:11px 16px;background:var(--accent);color:#fff}.btn.secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}.btn.danger{background:var(--danger)}.notice{padding:13px;border-left:4px solid var(--accent);border-radius:8px;background:var(--surface2);color:var(--muted)}.notice.warning{border-left-color:var(--warn)}.status{min-height:1.35em;font-weight:700}.status.ok{color:var(--ok)}.status.bad{color:var(--danger)}.timeline{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:16px}.timeline div{padding:12px 6px;text-align:center;border-radius:8px;background:var(--surface2);font-size:.82rem}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:10px 7px;border-bottom:1px solid var(--border);vertical-align:top}.switch-row{display:flex;gap:10px;align-items:flex-start;margin:14px 0}.switch-row input{width:22px;min-height:22px}.hidden{display:none!important}.pill{display:inline-block;padding:4px 8px;border-radius:999px;background:var(--surface2);font-size:.78rem}.modal{display:none;position:fixed;inset:0;z-index:80;background:#0008;padding:16px;align-items:center;justify-content:center}.modal.open{display:flex}.modal-card{width:min(100%,520px);background:var(--surface);border-radius:16px;padding:22px;box-shadow:var(--shadow)}
+    @media(max-width:720px){.grid{grid-template-columns:1fr}.tabs{font-size:.82rem}.theme-label{display:none}.topbar{grid-template-columns:48px 1fr 48px}.theme-btn{width:44px;padding:0}.timeline{grid-template-columns:1fr 1fr}.topbar h1{font-size:1.05rem}}
   </style>
 </head>
 <body>
-  <header class="topbar">
-    <button id="menuButton" class="icon-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
-    <h1 id="pageTitle">Starter Calculator</h1>
-    <button id="themeButton" class="theme-btn" aria-label="Toggle colour theme"><span id="themeIcon">🌙</span><span class="theme-label"> Dark</span></button>
-  </header>
+<header class="topbar"><button id="menuBtn" class="icon-btn" aria-label="Open menu">☰</button><h1 id="pageTitle">Starter Calculator</h1><button id="themeBtn" class="theme-btn"><span id="themeIcon">🌙</span><span class="theme-label"> Dark</span></button></header>
+<div id="backdrop" class="backdrop"></div>
+<nav id="drawer" class="drawer"><div class="drawer-head"><strong>🍞 Sourdough Companion v5</strong><button id="closeMenu" class="icon-btn">×</button></div><button class="nav-btn active" data-page="calculatorPage">⚖️ Starter Calculator</button><button class="nav-btn" data-page="insightsPage">📈 Starter Insights</button><hr><p class="intro">Offline-first logbook with optional anonymous community contributions.</p><p id="syncBadge" class="pill">Checking data layer…</p></nav>
 
-  <div id="backdrop" class="backdrop"></div>
-  <nav id="drawer" class="drawer" aria-label="Main navigation">
-    <div class="drawer-head"><strong>🍞 Sourdough Companion</strong><button id="closeMenu" class="icon-btn" aria-label="Close navigation">×</button></div>
-    <button class="nav-btn active" data-page="calculator">⚖️ Starter Calculator</button>
-    <button class="nav-btn" data-page="peak">⏱️ Peak Estimator</button>
-    <button class="nav-btn" data-page="scheduler">📅 Feed Scheduler</button>
-    <button class="nav-btn" data-page="logbook">📈 Starter Logbook</button>
-  </nav>
+<main>
+<section id="calculatorPage" class="page active"><div class="card"><h2>Starter Calculator</h2><p id="calcHint" class="intro">Calculate a balanced feed from the starter you have and the recipe amount you need.</p>
+<div class="tabs" id="calcTabs"><button class="tab active" data-panel="initialPanel">Initial Starter</button><button class="tab" data-panel="ratioPanel">Feed Ratio</button><button class="tab" data-panel="customPanel">Smart Custom</button></div>
+<div id="initialPanel" class="panel active"><div class="grid"><div><div class="field"><label>Current starter (g)</label><input id="iX" type="number" min="0" step="0.1"></div><div class="field"><label>Recipe requirement (g)</label><input id="iR" type="number" min="0" step="0.1"></div><div class="field"><label>Starter reserve (g)</label><input id="iB" type="number" min="0" step="0.1" placeholder="Blank = 3.5% or 30g minimum"></div><div class="field"><label>Desired hydration (%)</label><input id="iH" type="number" min="1" step="0.1" value="100"></div><p id="iErr" class="status bad"></p><button class="btn danger" data-clear="initial">Clear</button></div><div class="results" id="iOut"></div></div></div>
+<div id="ratioPanel" class="panel"><div class="grid"><div><div class="field"><label>Flour ratio in 1:F:W</label><input id="rF" type="number" min="0" step="0.01" value="3"></div><div class="field"><label>Water ratio in 1:F:W</label><input id="rW" type="number" min="0" step="0.01" value="3"></div><div class="field"><label>Recipe requirement (g)</label><input id="rR" type="number" min="0" step="0.1"></div><div class="field"><label>Starter reserve (g)</label><input id="rB" type="number" min="0" step="0.1" placeholder="Blank = 3.5% or 30g minimum"></div><p id="rErr" class="status bad"></p><button class="btn danger" data-clear="ratio">Clear</button></div><div class="results" id="rOut"></div></div></div>
+<div id="customPanel" class="panel"><p class="notice">Enter any three of current starter, flour ratio, water ratio, and recipe requirement. The fourth field will be calculated and faded. Reserve is added to the recipe requirement.</p><div class="grid"><div><div id="cXField" class="field"><label>Current starter (g)<span class="badge"></span></label><input id="cX" type="number" min="0" step="0.1"></div><div id="cFField" class="field"><label>Flour ratio<span class="badge"></span></label><input id="cF" type="number" min="0" step="0.01"></div><div id="cWField" class="field"><label>Water ratio<span class="badge"></span></label><input id="cW" type="number" min="0" step="0.01"></div><div id="cRField" class="field"><label>Recipe requirement (g)<span class="badge"></span></label><input id="cR" type="number" min="0" step="0.1"></div><div class="field"><label>Starter reserve (g)</label><input id="cB" type="number" min="0" step="0.1" placeholder="Blank = auto"></div><p id="cErr" class="status bad"></p><button class="btn danger" data-clear="custom">Clear</button></div><div class="results" id="cOut"></div></div></div>
+</div></section>
 
-  <main>
-    <section id="calculator" class="page active">
-      <div class="card">
-        <h2>Starter Calculator</h2><p id="calcHint" class="intro">Calculate the feeding ratio required from your current starter.</p>
-        <div class="tabs">
-          <button class="tab active" data-mode="1">Initial Starter</button>
-          <button class="tab" data-mode="2">Feed Ratio</button>
-          <button class="tab" data-mode="3">Smart Custom</button>
-        </div>
-        <div class="grid">
-          <div>
-            <div id="fieldX" class="field"><label>Current starter (g)<span class="badge"></span></label><input id="calcX" type="number" min="0" step="0.1" inputmode="decimal"></div>
-            <div id="fieldA" class="field hidden"><label>Feed ratio A in 1:A:A<span class="badge"></span></label><input id="calcA" type="number" min="0" step="0.01" inputmode="decimal"></div>
-            <div id="fieldR" class="field"><label>Recipe requirement (g)<span class="badge"></span></label><input id="calcR" type="number" min="0" step="0.1" inputmode="decimal"></div>
-            <div class="field"><label>Starter reserve / buffer (g)</label><input id="calcB" type="number" min="0" step="0.1" inputmode="decimal" placeholder="Blank = auto, 3.5% or 30g minimum"></div>
-            <p id="calcError" class="error"></p>
-            <div class="actions"><button id="clearCalc" class="btn danger">Clear calculator</button></div>
-          </div>
-          <div class="results">
-            <h3>What you need</h3>
-            <div class="result-row"><span>Recipe requirement</span><strong id="outR">—</strong></div>
-            <div class="result-row"><span>Starter reserve</span><strong id="outB">—</strong></div>
-            <div class="result-row"><span>Total yield</span><strong id="outT">—</strong></div><hr>
-            <h3>What you feed</h3>
-            <div class="result-row"><span>Starter</span><strong id="outX">—</strong></div>
-            <div class="result-row"><span>Water</span><strong id="outY">—</strong></div>
-            <div class="result-row"><span>Flour</span><strong id="outZ">—</strong></div>
-            <p id="outRatio"><strong>Ratio:</strong> —</p>
-          </div>
-        </div>
-      </div>
-    </section>
+<section id="insightsPage" class="page"><div class="card"><h2>Starter Insights</h2><p class="intro">Estimate peak timing, work backward to a feed time, and build a personal logbook.</p>
+<div class="tabs" id="insightTabs"><button class="tab active" data-panel="peakPanel">Peak Estimator</button><button class="tab" data-panel="schedulePanel">Feed Scheduler</button><button class="tab" data-panel="logPanel">Starter Logbook</button></div>
+<div id="peakPanel" class="panel active"><p class="notice warning"><strong>Estimate only:</strong> temperature, feeding history, culture condition, flour and hydration create real variation. Use a domed top, expansion, bubbles and aroma as the final readiness check.</p><div class="grid"><div><div class="field"><label>Flour ratio</label><input id="pF" type="number" min="0.1" step="0.1" value="3"></div><div class="field"><label>Water ratio</label><input id="pW" type="number" min="0.1" step="0.1" value="3"></div><div class="field"><label>Temperature (°C)</label><input id="pT" type="number" step="0.1" value="22"></div><div class="field"><label>Flour type</label><select id="pFlour"><option value="white">White all-purpose</option><option value="bread" selected>Bread flour</option><option value="mixed">Mixed white/whole grain</option><option value="whole">Whole wheat</option><option value="rye">Rye-heavy</option></select></div><div class="field"><label>Starter condition</label><select id="pCondition"><option value="weak">Weak / recently refrigerated</option><option value="average" selected>Average</option><option value="strong">Strong</option><option value="veryActive">Very active</option></select></div><button id="estimateBtn" class="btn">Estimate peak</button><p id="pErr" class="status bad"></p></div><div class="results"><div id="peakResult" class="big">—</div><p id="peakSource">Enter conditions to calculate an estimate.</p><div class="timeline"><div><strong>Early rise</strong><br><span id="tlRise">—</span></div><div><strong>Near peak</strong><br><span id="tlNear">—</span></div><div><strong>Peak</strong><br><span id="tlPeak">—</span></div><div><strong>Past peak</strong><br><span id="tlFall">—</span></div></div><hr><h3>Community data</h3><div class="result-row"><span>Nearby samples</span><strong id="communityN">—</strong></div><div class="result-row"><span>Nearby average</span><strong id="communityAvg">—</strong></div><div class="result-row"><span>Confidence</span><strong id="communityConfidence">—</strong></div><p class="intro">The page downloads at most 500 observations and uses nearby ratio, hydration, temperature, flour, and starter-condition matches.</p></div></div></div>
+<div id="schedulePanel" class="panel"><div class="grid"><div><div class="field"><label>Starter ready by</label><input id="sReady" type="datetime-local"></div><div class="field"><label>Flour ratio</label><input id="sF" type="number" min="0.1" step="0.1" value="5"></div><div class="field"><label>Water ratio</label><input id="sW" type="number" min="0.1" step="0.1" value="5"></div><div class="field"><label>Temperature (°C)</label><input id="sT" type="number" step="0.1" value="22"></div><div class="field"><label>Flour type</label><select id="sFlour"><option value="white">White all-purpose</option><option value="bread" selected>Bread flour</option><option value="mixed">Mixed</option><option value="whole">Whole wheat</option><option value="rye">Rye-heavy</option></select></div><div class="field"><label>Starter condition</label><select id="sCondition"><option value="weak">Weak / refrigerated</option><option value="average" selected>Average</option><option value="strong">Strong</option><option value="veryActive">Very active</option></select></div><button id="scheduleBtn" class="btn">Build schedule</button><p id="sErr" class="status bad"></p></div><div class="results"><p>Recommended feed time</p><div id="feedAt" class="big">—</div><p id="scheduleRange">—</p><p class="notice warning">Treat the suggested feed time as a planning target and inspect the starter before use.</p></div></div></div>
+<div id="logPanel" class="panel"><p class="notice"><strong>On-device storage:</strong> your full logbook is stored in IndexedDB in this browser. No account is required. Clearing site data or changing devices can remove access to local entries. Export a backup periodically.</p><div class="grid"><div><div class="field"><label>Feed date and time</label><input id="lFed" type="datetime-local"></div><div class="field"><label>Flour ratio</label><input id="lF" type="number" min="0.1" step="0.1"></div><div class="field"><label>Water ratio</label><input id="lW" type="number" min="0.1" step="0.1"></div><div class="field"><label>Hydration</label><input id="lH" readonly placeholder="Calculated automatically"></div><div class="field"><label>Temperature (°C)</label><input id="lT" type="number" step="0.1"></div><div class="field"><label>Flour type</label><select id="lFlour"><option value="white">White all-purpose</option><option value="bread" selected>Bread flour</option><option value="mixed">Mixed</option><option value="whole">Whole wheat</option><option value="rye">Rye-heavy</option></select></div><div class="field"><label>Starter condition</label><select id="lCondition"><option value="weak">Weak / refrigerated</option><option value="average" selected>Average</option><option value="strong">Strong</option><option value="veryActive">Very active</option></select></div><div class="field"><label>Observed hours to peak</label><input id="lPeak" type="number" min="0.1" step="0.1"></div><div class="field"><label>Rise multiplier</label><input id="lRise" type="number" min="1" step="0.1" placeholder="Example: 2.0 for doubled"></div><div class="field"><label>Notes</label><textarea id="lNotes"></textarea></div><label class="switch-row"><input id="lContribute" type="checkbox"><span><strong>Contribute this observation anonymously</strong><br><span class="intro">Uploads only starter-related fields to Firestore. Notes and local IDs are not uploaded.</span></span></label><button id="saveLogBtn" class="btn">Save observation</button><p id="logStatus" class="status"></p></div><div><h3>Your observations</h3><p id="calibrationConfidence">Calibration confidence: none</p><div class="table-wrap"><table><thead><tr><th>Fed</th><th>Ratio</th><th>Temp</th><th>Peak</th><th>Sync</th><th></th></tr></thead><tbody id="logRows"></tbody></table></div><div class="actions"><button id="syncBtn" class="btn">Retry pending uploads</button><button id="exportBtn" class="btn secondary">Export JSON</button><label class="btn secondary" style="cursor:pointer">Import JSON<input id="importInput" type="file" accept="application/json" class="hidden"></label><button id="deleteLogsBtn" class="btn danger">Delete local logs</button></div><p id="queueStatus" class="intro"></p></div></div></div>
+</div></section>
+</main>
 
-    <section id="peak" class="page">
-      <div class="card">
-        <h2>Peak Time Estimator</h2>
-        <p class="notice warning"><strong>Estimate only:</strong> starter condition, flour, hydration, temperature history, microbial culture and observation all affect timing. Use rise, bubbles, aroma and a domed top as the final readiness check.</p>
-        <div class="grid">
-          <div>
-            <div class="field"><label>Feed ratio A in 1:A:A</label><input id="peakRatio" type="number" min="0.25" step="0.25" value="3"></div>
-            <div class="field"><label>Temperature</label><input id="peakTemp" type="number" step="0.1" value="22"></div>
-            <div class="field"><label>Temperature unit</label><select id="tempUnit"><option value="C">°C</option><option value="F">°F</option></select></div>
-            <div class="field"><label>Starter condition</label><select id="strength"><option value="1.25">Weak / recently refrigerated</option><option value="1" selected>Average and established</option><option value="0.9">Strong</option><option value="0.82">Very active</option></select></div>
-            <div class="field"><label>Feed flour</label><select id="flour"><option value="1.08">White all-purpose</option><option value="1" selected>Bread flour</option><option value="0.92">Mixed white and whole grain</option><option value="0.88">Whole wheat</option><option value="0.82">Rye-heavy</option></select></div>
-            <button id="estimatePeak" class="btn">Estimate peak</button><p id="peakError" class="error"></p>
-          </div>
-          <div class="results">
-            <div class="big-result" id="peakRange">—</div>
-            <p id="peakBasis">Enter the conditions to estimate a range.</p>
-            <div class="timeline"><div><strong>Early rise</strong><br><span id="riseTime">—</span></div><div><strong>Near peak</strong><br><span id="nearTime">—</span></div><div><strong>Peak</strong><br><span id="peakTime">—</span></div><div><strong>Past peak</strong><br><span id="fallTime">—</span></div></div>
-            <p id="calibrationNote"></p>
-          </div>
-        </div>
-        <details><summary>How this estimate works</summary><p>The starting curve interpolates published ratio timing ranges around room temperature, then applies explicit multipliers for temperature, flour and starter condition. Matching logbook observations can recalibrate the midpoint. The result is intentionally a range, not a promise.</p></details>
-      </div>
-    </section>
+<div id="consentModal" class="modal"><div class="modal-card"><h2>Help improve sourdough predictions</h2><p>Starter observations can be contributed anonymously to the shared community dataset. No name, email, account, notes, or local identifier is uploaded.</p><div class="actions"><button id="enableContrib" class="btn">Enable contributions</button><button id="declineContrib" class="btn secondary">Not now</button></div></div></div>
 
-    <section id="scheduler" class="page">
-      <div class="card">
-        <h2>Feed Scheduler</h2><p class="intro">Work backwards from when the starter should be near peak.</p>
-        <div class="grid"><div>
-          <div class="field"><label>Starter ready by</label><input id="readyAt" type="datetime-local"></div>
-          <div class="field"><label>Feed ratio A in 1:A:A</label><input id="scheduleRatio" type="number" min="0.25" step="0.25" value="5"></div>
-          <div class="field"><label>Temperature (°C)</label><input id="scheduleTemp" type="number" step="0.1" value="22"></div>
-          <div class="field"><label>Starter condition</label><select id="scheduleStrength"><option value="1.25">Weak / recently refrigerated</option><option value="1" selected>Average and established</option><option value="0.9">Strong</option><option value="0.82">Very active</option></select></div>
-          <div class="field"><label>Feed flour</label><select id="scheduleFlour"><option value="1.08">White all-purpose</option><option value="1" selected>Bread flour</option><option value="0.92">Mixed white and whole grain</option><option value="0.88">Whole wheat</option><option value="0.82">Rye-heavy</option></select></div>
-          <button id="buildSchedule" class="btn">Build schedule</button><p id="scheduleError" class="error"></p>
-        </div><div class="results"><p>Recommended feed time</p><div class="big-result" id="feedAt">—</div><p id="scheduleWindow">—</p><p class="notice warning">Check the starter itself before use. If it peaks earlier or later than estimated, record the observation in the logbook to improve future estimates.</p></div></div>
-      </div>
-    </section>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
-    <section id="logbook" class="page">
-      <div class="card">
-        <h2>Starter Logbook</h2>
-        <p class="notice"><strong>On-device privacy notice:</strong> all logbook data is stored only in this browser on this device using local storage. Nothing is uploaded. Clearing browser/site data, using private browsing, or changing devices can remove or hide entries.</p>
-        <div class="grid"><div>
-          <div class="field"><label>Feed date and time</label><input id="logFedAt" type="datetime-local"></div>
-          <div class="field"><label>Ratio A in 1:A:A</label><input id="logRatio" type="number" min="0.25" step="0.25"></div>
-          <div class="field"><label>Temperature (°C)</label><input id="logTemp" type="number" step="0.1"></div>
-          <div class="field"><label>Hours to observed peak</label><input id="logPeak" type="number" min="0.1" step="0.1"></div>
-          <div class="field"><label>Flour</label><select id="logFlour"><option value="white">White all-purpose</option><option value="bread" selected>Bread flour</option><option value="mixed">Mixed</option><option value="whole">Whole wheat</option><option value="rye">Rye-heavy</option></select></div>
-          <div class="field"><label>Notes</label><textarea id="logNotes" placeholder="Rise, aroma, dome, refrigeration, unusual conditions..."></textarea></div>
-          <button id="saveLog" class="btn">Save observation</button><p id="logError" class="error"></p>
-        </div><div>
-          <h3>Your observations</h3><p id="confidence">Calibration confidence: none</p>
-          <div class="table-wrap"><table><thead><tr><th>Fed</th><th>Ratio</th><th>Temp</th><th>Peak</th><th></th></tr></thead><tbody id="logRows"></tbody></table></div>
-          <div class="actions"><button id="exportLogs" class="btn secondary">Export JSON</button><button id="clearLogs" class="btn danger">Delete all logs</button></div>
-        </div></div>
-      </div>
-    </section>
-  </main>
+const firebaseConfig={apiKey:"AIzaSyDQyH5nqHZCeirv4RwQcsLahm0HlTSTIZY",authDomain:"sourdough-companion-167b0.firebaseapp.com",projectId:"sourdough-companion-167b0",storageBucket:"sourdough-companion-167b0.firebasestorage.app",messagingSenderId:"523813195144",appId:"1:523813195144:web:7147af6acda2ce0ab97e3d",measurementId:"G-PVPTZF8TE7"};
+const app=initializeApp(firebaseConfig); const firestore=getFirestore(app); const VERSION="5.0.0";
+const $=id=>document.getElementById(id), n=id=>parseFloat($(id).value), good=x=>Number.isFinite(x)&&x>0, fmt=x=>Number.isFinite(x)?x.toFixed(1):"—", g=x=>fmt(x)+"g";
 
-<script>
-'use strict';
-const $ = id => document.getElementById(id);
-const num = id => parseFloat($(id).value);
-const grams = n => Number.isFinite(n) ? n.toFixed(1) + 'g' : '—';
-const calcIds = ['calcX','calcA','calcR','calcB'];
-let calcMode = 1;
+// IndexedDB
+let db;
+function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open("SourdoughCompanion",5);req.onupgradeneeded=e=>{const d=e.target.result;["starterLogs","pendingUploads","communityCache","calibrationData"].forEach(s=>{if(!d.objectStoreNames.contains(s))d.createObjectStore(s,{keyPath:"id"})})};req.onsuccess=()=>{db=req.result;resolve(db)};req.onerror=()=>reject(req.error)})}
+function store(name,mode="readonly"){return db.transaction(name,mode).objectStore(name)}
+function idbPut(name,value){return new Promise((res,rej)=>{const r=store(name,"readwrite").put(value);r.onsuccess=()=>res(value);r.onerror=()=>rej(r.error)})}
+function idbGetAll(name){return new Promise((res,rej)=>{const r=store(name).getAll();r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+function idbDelete(name,id){return new Promise((res,rej)=>{const r=store(name,"readwrite").delete(id);r.onsuccess=()=>res();r.onerror=()=>rej(r.error)})}
+function idbClear(name){return new Promise((res,rej)=>{const r=store(name,"readwrite").clear();r.onsuccess=()=>res();r.onerror=()=>rej(r.error)})}
 
-function setTheme(theme){ document.documentElement.dataset.theme=theme; localStorage.setItem('sc-theme',theme); $('themeIcon').textContent=theme==='dark'?'☀️':'🌙'; document.querySelector('.theme-label').textContent=theme==='dark'?' Light':' Dark'; }
-setTheme(localStorage.getItem('sc-theme') || 'light');
-$('themeButton').onclick=()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+// Theme, menu, navigation, tabs
+function setTheme(t){document.documentElement.dataset.theme=t;localStorage.setItem("sc-theme",t);$("themeIcon").textContent=t==="dark"?"☀️":"🌙";document.querySelector(".theme-label").textContent=t==="dark"?" Light":" Dark"} setTheme(localStorage.getItem("sc-theme")||"light"); $("themeBtn").onclick=()=>setTheme(document.documentElement.dataset.theme==="dark"?"light":"dark");
+function menu(open){$("drawer").classList.toggle("open",open);$("backdrop").classList.toggle("open",open)} $("menuBtn").onclick=()=>menu(true);$("closeMenu").onclick=()=>menu(false);$("backdrop").onclick=()=>menu(false);
+document.querySelectorAll(".nav-btn[data-page]").forEach(b=>b.onclick=()=>{document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));document.querySelectorAll(".nav-btn").forEach(x=>x.classList.remove("active"));$(b.dataset.page).classList.add("active");b.classList.add("active");$("pageTitle").textContent=b.textContent.replace(/^\S+\s/,"");menu(false)});
+function wireTabs(group){group.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{group.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");const card=group.closest(".card");card.querySelectorAll(":scope > .panel").forEach(p=>p.classList.remove("active"));$(b.dataset.panel).classList.add("active")})} wireTabs($("calcTabs"));wireTabs($("insightTabs"));
 
-function toggleMenu(open){ $('drawer').classList.toggle('open',open); $('backdrop').classList.toggle('open',open); $('menuButton').setAttribute('aria-expanded',String(open)); }
-$('menuButton').onclick=()=>toggleMenu(true); $('closeMenu').onclick=()=>toggleMenu(false); $('backdrop').onclick=()=>toggleMenu(false);
-document.querySelectorAll('.nav-btn').forEach(btn=>btn.onclick=()=>{ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active')); $(btn.dataset.page).classList.add('active'); btn.classList.add('active'); $('pageTitle').textContent=btn.textContent.replace(/^\S+\s/,''); toggleMenu(false); });
+function reserve(R,B){return Number.isFinite(B)?B:Math.max(R*.035,30)}
+function resultsHTML(X,F,W,R,B,T){const H=W/F*100;return `<h3>Calculation</h3><div class="result-row"><span>Ratio</span><strong>1 : ${F.toFixed(2)} : ${W.toFixed(2)}</strong></div><div class="result-row"><span>Hydration</span><strong>${H.toFixed(1)}%</strong></div><div class="result-row"><span>Recipe requirement</span><strong>${g(R)}</strong></div><div class="result-row"><span>Reserve</span><strong>${g(B)}</strong></div><div class="result-row"><span>Total yield</span><strong>${g(T)}</strong></div><hr><div class="result-row"><span>Starter</span><strong>${g(X)}</strong></div><div class="result-row"><span>Flour</span><strong>${g(F*X)}</strong></div><div class="result-row"><span>Water</span><strong>${g(W*X)}</strong></div>`}
+function emptyOut(id){$(id).innerHTML="<p>Enter values to calculate.</p>"}
+function calcInitial(){const X=n("iX"),R=n("iR"),H=n("iH"),B=reserve(R,n("iB"));if(!(good(X)&&good(R)&&good(H))){emptyOut("iOut");return}const T=R+B,E=T-X;if(E<=0){$("iErr").textContent="Current starter already meets or exceeds the total target.";emptyOut("iOut");return}$("iErr").textContent="";const ratioSum=E/X,F=ratioSum/(1+H/100),W=ratioSum-F;$("iOut").innerHTML=resultsHTML(X,F,W,R,B,T)}
+function calcRatio(){const F=n("rF"),W=n("rW"),R=n("rR"),B=reserve(R,n("rB"));if(!(good(F)&&good(W)&&good(R))){emptyOut("rOut");return}const T=R+B,X=T/(1+F+W);$("rErr").textContent="";$("rOut").innerHTML=resultsHTML(X,F,W,R,B,T)}
+function clearComputed(){["cXField","cFField","cWField","cRField"].forEach(id=>{$(id).classList.remove("computed");$(id).querySelector(".badge").textContent=""})}
+function computed(id,value){clearComputed();const field=$(id+"Field");field.classList.add("computed");field.querySelector(".badge").textContent="AUTO CALCULATED";$(id).value=Number(value).toFixed(id==="cR"||id==="cX"?1:2)}
+function calcCustom(){clearComputed();let X=n("cX"),F=n("cF"),W=n("cW"),R=n("cR"),B=n("cB");const flags=[good(X),good(F),good(W),good(R)];if(flags.filter(Boolean).length<3){emptyOut("cOut");$("cErr").textContent="";return}let T;if(!good(R)){T=X*(1+F+W);B=Number.isFinite(B)?B:Math.max((T/1.035)*.035,30);R=T-B;if(R<=0){$("cErr").textContent="Reserve is too large.";return}computed("cR",R)}else{B=reserve(R,B);T=R+B;if(!good(X)){X=T/(1+F+W);computed("cX",X)}else if(!good(F)){F=(T/X)-1-W;if(!good(F)){ $("cErr").textContent="Values require a flour ratio at or below zero.";return}computed("cF",F)}else if(!good(W)){W=(T/X)-1-F;if(!good(W)){ $("cErr").textContent="Values require a water ratio at or below zero.";return}computed("cW",W)}else if(Math.abs(X*(1+F+W)-T)>.6){$("cErr").textContent="All four values are entered but do not agree. Clear one so Smart Custom can solve it."} }$("cOut").innerHTML=resultsHTML(X,F,W,R,B,T)}
+["iX","iR","iB","iH"].forEach(id=>$(id).oninput=calcInitial);["rF","rW","rR","rB"].forEach(id=>$(id).oninput=calcRatio);["cX","cF","cW","cR","cB"].forEach(id=>$(id).oninput=calcCustom);
+document.querySelectorAll("[data-clear]").forEach(b=>b.onclick=()=>{const map={initial:["iX","iR","iB"],ratio:["rR","rB"],custom:["cX","cF","cW","cR","cB"]};map[b.dataset.clear].forEach(id=>$(id).value="");clearComputed();calcInitial();calcRatio();calcCustom()});
 
-function clearComputed(){ ['fieldX','fieldA','fieldR'].forEach(id=>{ $(id).classList.remove('computed'); $(id).querySelector('.badge').textContent=''; }); }
-function markComputed(id,value){ clearComputed(); const map={calcX:'fieldX',calcA:'fieldA',calcR:'fieldR'}; const f=$(map[id]); f.classList.add('computed'); f.querySelector('.badge').textContent='AUTO CALCULATED'; $(id).value=Number(value).toFixed(id==='calcA'?2:1); }
-function resetCalcOutput(message=''){ ['outR','outB','outT','outX','outY','outZ'].forEach(id=>$(id).textContent='—'); $('outRatio').innerHTML='<strong>Ratio:</strong> —'; $('calcError').textContent=message; }
-function reserveFor(r,b){ return Number.isFinite(b) ? b : Math.max(r*.035,30); }
-function calculateStarter(){
-  clearComputed(); $('calcError').textContent=''; let X=num('calcX'),A=num('calcA'),R=num('calcR'),B=num('calcB'),T,Y;
-  if(calcMode===1){ if(!(X>0&&R>0)){resetCalcOutput();return;} B=reserveFor(R,B);T=R+B;if(X>=T){resetCalcOutput('Current starter must be less than total required yield.');return;}A=(T-X)/(2*X);Y=A*X; }
-  else if(calcMode===2){ if(!(A>0&&R>0)){resetCalcOutput();return;}B=reserveFor(R,B);T=R+B;X=T/(1+2*A);Y=A*X; }
-  else {
-    const hx=X>0,ha=A>0,hr=R>0;
-    if([hx,ha,hr].filter(Boolean).length<2){resetCalcOutput();return;}
-    if(hx&&ha&&!hr){ T=X*(1+2*A); B=Number.isFinite(B)?B:Math.max(T/1.035*.035,30); R=T-B; if(R<=0){resetCalcOutput('This reserve is too large for the calculated total yield.');return;} Y=A*X; markComputed('calcR',R); }
-    else if(hx&&hr&&!ha){ B=reserveFor(R,B);T=R+B;if(X>=T){resetCalcOutput('Current starter must be less than total required yield.');return;}A=(T-X)/(2*X);Y=A*X;markComputed('calcA',A); }
-    else if(ha&&hr&&!hx){ B=reserveFor(R,B);T=R+B;X=T/(1+2*A);Y=A*X;markComputed('calcX',X); }
-    else { B=reserveFor(R,B);T=X*(1+2*A);Y=A*X; if(Math.abs(T-(R+B))>.6){$('calcError').textContent='All three values are entered but do not agree. Clear one value so Smart Custom can solve it.';} }
-  }
-  $('outR').textContent=grams(R);$('outB').textContent=grams(B);$('outT').textContent=grams(T);$('outX').textContent=grams(X);$('outY').textContent=grams(Y);$('outZ').textContent=grams(Y);$('outRatio').innerHTML='<strong>Ratio:</strong> 1 : '+A.toFixed(2)+' : '+A.toFixed(2);
-}
-function setCalcMode(m){ calcMode=m; document.querySelectorAll('.tab[data-mode]').forEach(b=>b.classList.toggle('active',Number(b.dataset.mode)===m)); $('fieldX').classList.toggle('hidden',m===2); $('fieldA').classList.toggle('hidden',m===1); const h={1:'Calculate the feeding ratio required from your current starter.',2:'Calculate the starter amount required for your chosen ratio.',3:'Enter any two of starter, ratio and recipe requirement. The calculated field fades and is marked AUTO.'}; $('calcHint').textContent=h[m]; clearComputed(); calculateStarter(); }
-document.querySelectorAll('.tab[data-mode]').forEach(b=>b.onclick=()=>setCalcMode(Number(b.dataset.mode)));
-calcIds.forEach(id=>$(id).addEventListener('input',()=>{ if(calcMode===3&&$(id).closest('.computed')) return; localStorage.setItem('sc-'+id,$(id).value); calculateStarter(); }));
-calcIds.forEach(id=>{ const v=localStorage.getItem('sc-'+id); if(v!==null)$(id).value=v; });
-$('clearCalc').onclick=()=>{calcIds.forEach(id=>{$(id).value='';localStorage.removeItem('sc-'+id)});clearComputed();resetCalcOutput();};
+// Prediction model and community cache
+const anchor=[[1,4.5],[2,6],[3,7.5],[4,9],[5,10.5],[6,12],[8,14],[10,18]];
+function basePeak(food){if(food<=1)return 4.5*Math.pow(food,.35);for(let i=1;i<anchor.length;i++){const a=anchor[i-1],b=anchor[i];if(food<=b[0])return a[1]+(food-a[0])*(b[1]-a[1])/(b[0]-a[0])}return 18*Math.pow(food/10,.45)}
+const flourFactor={white:1.08,bread:1,mixed:.94,whole:.89,rye:.82}, conditionFactor={weak:1.25,average:1,strong:.9,veryActive:.82};
+function genericPeak(F,W,T,flour,condition){const food=(F+W)/2,hydr=W/F*100;const hydrationFactor=Math.max(.78,Math.min(1.22,1+Math.abs(hydr-100)*.0022));return basePeak(food)*Math.pow(2,(22-T)/10)*flourFactor[flour]*conditionFactor[condition]*hydrationFactor}
+let community=[];
+async function loadCommunity(){try{const snap=await getDocs(query(collection(firestore,"communityObservations"),limit(500)));community=snap.docs.map(d=>d.data()).filter(x=>good(Number(x.flourRatio))&&good(Number(x.waterRatio))&&good(Number(x.temperature))&&good(Number(x.peakHours)));await idbPut("communityCache",{id:"latest",savedAt:Date.now(),rows:community});$("syncBadge").textContent=`Online • ${community.length} community samples cached`}catch(e){const c=(await idbGetAll("communityCache"))[0];community=c?.rows||[];$("syncBadge").textContent=`Offline • ${community.length} cached samples`}}
+function nearby(F,W,T,flour,condition){return community.filter(x=>Math.abs(x.flourRatio-F)<=Math.max(.75,F*.25)&&Math.abs(x.waterRatio-W)<=Math.max(.75,W*.25)&&Math.abs(x.temperature-T)<=3&&(x.flour===flour||flour==="mixed")&&(x.starterCondition===condition||condition==="average"))}
+function estimate(F,W,T,flour,condition){const gen=genericPeak(F,W,T,flour,condition), rows=nearby(F,W,T,flour,condition);if(!rows.length)return{mid:gen,n:0,avg:null};const avg=rows.reduce((s,x)=>s+Number(x.peakHours),0)/rows.length,blend=Math.min(.75,rows.length/20);return{mid:gen*(1-blend)+avg*blend,n:rows.length,avg}}
+function renderEstimate(F,W,T,flour,condition){const e=estimate(F,W,T,flour,condition),lo=e.mid*.82,hi=e.mid*1.18;$("peakResult").textContent=`${lo.toFixed(1)}–${hi.toFixed(1)} hours`;$("peakSource").textContent=e.n?"Blended generic and nearby community observations.":"Generic estimate. Community data will be used when nearby samples exist.";$("tlRise").textContent=`${(e.mid*.25).toFixed(1)}–${(e.mid*.45).toFixed(1)}h`;$("tlNear").textContent=`${(e.mid*.72).toFixed(1)}–${(e.mid*.92).toFixed(1)}h`;$("tlPeak").textContent=`${lo.toFixed(1)}–${hi.toFixed(1)}h`;$("tlFall").textContent=`${(e.mid*1.15).toFixed(1)}–${(e.mid*1.45).toFixed(1)}h`;$("communityN").textContent=e.n;$("communityAvg").textContent=e.avg?e.avg.toFixed(1)+"h":"—";$("communityConfidence").textContent=e.n>=30?"High":e.n>=10?"Medium":e.n>=3?"Low":"Very low";return e}
+$("estimateBtn").onclick=()=>{const F=n("pF"),W=n("pW"),T=n("pT");if(!(good(F)&&good(W)&&T>=4&&T<=40)){ $("pErr").textContent="Enter positive ratios and a temperature from 4°C to 40°C.";return}$("pErr").textContent="";renderEstimate(F,W,T,$("pFlour").value,$("pCondition").value)};
+$("scheduleBtn").onclick=()=>{const ready=new Date($("sReady").value),F=n("sF"),W=n("sW"),T=n("sT");if(Number.isNaN(ready.getTime())||!(good(F)&&good(W)&&T>=4&&T<=40)){ $("sErr").textContent="Enter a valid ready time, ratios, and temperature.";return}$("sErr").textContent="";const e=estimate(F,W,T,$("sFlour").value,$("sCondition").value),feed=new Date(ready-e.mid*3600000),lo=new Date(ready-e.mid*.18*3600000),hi=new Date(ready+e.mid*.18*3600000);$("feedAt").textContent=feed.toLocaleString([],{dateStyle:"medium",timeStyle:"short"});$("scheduleRange").textContent=`Estimated peak window: ${lo.toLocaleString([],{dateStyle:"medium",timeStyle:"short"})} to ${hi.toLocaleString([],{dateStyle:"medium",timeStyle:"short"})}.`};
 
-const ratioAnchors=[[1,4.5],[2,6],[3,7.5],[4,9],[5,10.5],[6,12],[8,14],[10,18]];
-function basePeak(r){ if(r<=1)return 4.5*Math.pow(r,.35); for(let i=1;i<ratioAnchors.length;i++){let a=ratioAnchors[i-1],b=ratioAnchors[i];if(r<=b[0])return a[1]+(r-a[0])*(b[1]-a[1])/(b[0]-a[0]);}return 18*Math.pow(r/10,.45); }
-function estimateHours(r,tempC,strength=1,flour=1){ const tempFactor=Math.pow(2,(22-tempC)/10); const generic=basePeak(r)*tempFactor*strength*flour; const logs=getLogs(); const nearby=logs.filter(x=>Math.abs(x.ratio-r)<=Math.max(1,r*.25)&&Math.abs(x.temp-tempC)<=3); if(!nearby.length)return {mid:generic,count:0}; let weighted=0,w=0; nearby.forEach(x=>{const expected=basePeak(x.ratio)*Math.pow(2,(22-x.temp)/10);const factor=x.peak/expected;const weight=1/(1+Math.abs(x.ratio-r)+Math.abs(x.temp-tempC));weighted+=factor*weight;w+=weight;}); const calibrated=generic*(weighted/w); const blend=Math.min(.75,nearby.length*.15); return {mid:generic*(1-blend)+calibrated*blend,count:nearby.length}; }
-function renderPeak(){ let r=num('peakRatio'),t=num('peakTemp');if($('tempUnit').value==='F')t=(t-32)*5/9;if(!(r>0&&t>=4&&t<=40)){ $('peakError').textContent='Enter a positive ratio and a temperature between 4°C and 40°C.';return;} $('peakError').textContent='';const e=estimateHours(r,t,Number($('strength').value),Number($('flour').value));const low=e.mid*.82,high=e.mid*1.18;$('peakRange').textContent=low.toFixed(1)+'–'+high.toFixed(1)+' hours';$('peakBasis').textContent='Estimated time from feeding to peak.';$('riseTime').textContent=(e.mid*.25).toFixed(1)+'–'+(e.mid*.45).toFixed(1)+'h';$('nearTime').textContent=(e.mid*.72).toFixed(1)+'–'+(e.mid*.92).toFixed(1)+'h';$('peakTime').textContent=low.toFixed(1)+'–'+high.toFixed(1)+'h';$('fallTime').textContent=(e.mid*1.15).toFixed(1)+'–'+(e.mid*1.45).toFixed(1)+'h';$('calibrationNote').textContent=e.count?'Adjusted with '+e.count+' nearby on-device observation'+(e.count===1?'':'s')+'.':'Generic estimate. Add logbook observations to calibrate it to this starter.'; }
-$('estimatePeak').onclick=renderPeak;
+// Logbook, consent, uploads
+function uuid(){return crypto.randomUUID?crypto.randomUUID():Date.now()+"-"+Math.random().toString(16).slice(2)}
+function updateHydration(){const F=n("lF"),W=n("lW");$("lH").value=good(F)&&good(W)?(W/F*100).toFixed(1)+"%":""} $("lF").oninput=updateHydration;$("lW").oninput=updateHydration;
+function cloudPayload(log){return{flourRatio:log.flourRatio,waterRatio:log.waterRatio,hydration:log.hydration,temperature:log.temperature,flour:log.flour,starterCondition:log.starterCondition,peakHours:log.peakHours,riseMultiplier:log.riseMultiplier,appSource:"Sourdough Companion",contributeVersion:"1",submittedByVersion:VERSION,version:1,createdAt:serverTimestamp()}}
+async function queueUpload(log){await idbPut("pendingUploads",{id:log.id,payload:cloudPayload(log)});await syncPending()}
+async function syncPending(){const pending=await idbGetAll("pendingUploads");let sent=0;for(const item of pending){try{await addDoc(collection(firestore,"communityObservations"),item.payload);await idbDelete("pendingUploads",item.id);const logs=await idbGetAll("starterLogs"),log=logs.find(x=>x.id===item.id);if(log){log.synced=true;await idbPut("starterLogs",log)}sent++}catch(e){break}}await renderLogs();$("queueStatus").textContent=sent?`${sent} pending contribution${sent===1?"":"s"} uploaded.`:`${(await idbGetAll("pendingUploads")).length} contribution(s) waiting to upload.`}
+async function renderLogs(){const logs=(await idbGetAll("starterLogs")).sort((a,b)=>new Date(b.fedAt)-new Date(a.fedAt));$("logRows").innerHTML=logs.length?"":'<tr><td colspan="6">No observations yet.</td></tr>';for(const x of logs){const tr=document.createElement("tr");tr.innerHTML=`<td>${new Date(x.fedAt).toLocaleDateString()}</td><td>1:${x.flourRatio}:${x.waterRatio}</td><td>${x.temperature}°C</td><td>${x.peakHours}h</td><td>${x.contribute?(x.synced?"Synced":"Queued"):"Local"}</td><td><button class="btn danger" data-delete="${x.id}">Delete</button></td>`;$("logRows").appendChild(tr)}document.querySelectorAll("[data-delete]").forEach(b=>b.onclick=async()=>{await idbDelete("starterLogs",b.dataset.delete);await idbDelete("pendingUploads",b.dataset.delete);renderLogs()});const c=logs.length===0?"none":logs.length<3?"low":logs.length<7?"medium":"high";$("calibrationConfidence").textContent=`Calibration confidence: ${c} (${logs.length} observation${logs.length===1?"":"s"})`}
+$("saveLogBtn").onclick=async()=>{const F=n("lF"),W=n("lW"),entry={id:uuid(),fedAt:$("lFed").value,flourRatio:F,waterRatio:W,hydration:W/F*100,temperature:n("lT"),flour:$("lFlour").value,starterCondition:$("lCondition").value,peakHours:n("lPeak"),riseMultiplier:n("lRise"),notes:$("lNotes").value.trim(),contribute:$("lContribute").checked,synced:false,createdLocal:new Date().toISOString()};if(!entry.fedAt||![F,W,entry.temperature,entry.peakHours,entry.riseMultiplier].every(good)){setLogStatus("Complete date, ratios, temperature, peak hours and rise multiplier.",false);return}await idbPut("starterLogs",entry);setLogStatus("Observation saved on this device.",true);if(entry.contribute)await queueUpload(entry);["lF","lW","lT","lPeak","lRise","lNotes"].forEach(id=>$(id).value="");updateHydration();renderLogs()};
+function setLogStatus(msg,ok){$("logStatus").textContent=msg;$("logStatus").className="status "+(ok?"ok":"bad")}
+$("syncBtn").onclick=syncPending;$("deleteLogsBtn").onclick=async()=>{if(confirm("Delete all local observations and queued uploads?")){await idbClear("starterLogs");await idbClear("pendingUploads");renderLogs()}};
+$("exportBtn").onclick=async()=>{const blob=new Blob([JSON.stringify(await idbGetAll("starterLogs"),null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="sourdough-logbook-v5.json";a.click();URL.revokeObjectURL(a.href)};
+$("importInput").onchange=async e=>{try{const rows=JSON.parse(await e.target.files[0].text());if(!Array.isArray(rows))throw Error();for(const row of rows){if(row.id)await idbPut("starterLogs",row)}setLogStatus("Backup imported.",true);renderLogs()}catch{setLogStatus("That file is not a valid logbook backup.",false)}e.target.value=""};
+function consent(choice){localStorage.setItem("sc-contribute",choice);$("lContribute").checked=choice==="yes";$("consentModal").classList.remove("open")}$("enableContrib").onclick=()=>consent("yes");$("declineContrib").onclick=()=>consent("no");
 
-function buildSchedule(){ const ready=new Date($('readyAt').value),r=num('scheduleRatio'),t=num('scheduleTemp');if(Number.isNaN(ready.getTime())||!(r>0&&t>=4&&t<=40)){ $('scheduleError').textContent='Enter a valid ready time, ratio and temperature.';return;} $('scheduleError').textContent=''; const e=estimateHours(r,t,Number($('scheduleStrength').value),Number($('scheduleFlour').value));const feed=new Date(ready.getTime()-e.mid*3600000);const early=new Date(ready.getTime()-e.mid*.18*3600000),late=new Date(ready.getTime()+e.mid*.18*3600000);$('feedAt').textContent=feed.toLocaleString([], {dateStyle:'medium',timeStyle:'short'});$('scheduleWindow').textContent='Estimated peak window: '+early.toLocaleString([], {dateStyle:'medium',timeStyle:'short'})+' to '+late.toLocaleString([], {dateStyle:'medium',timeStyle:'short'})+'.'; }
-$('buildSchedule').onclick=buildSchedule;
-
-function getLogs(){try{return JSON.parse(localStorage.getItem('sc-logs')||'[]')}catch{return []}}
-function saveLogs(v){localStorage.setItem('sc-logs',JSON.stringify(v));renderLogs()}
-function renderLogs(){const logs=getLogs();$('logRows').innerHTML=logs.length?'':`<tr><td colspan="5">No observations yet.</td></tr>`;logs.slice().reverse().forEach(x=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${new Date(x.fedAt).toLocaleDateString()}</td><td>1:${x.ratio}:${x.ratio}</td><td>${x.temp}°C</td><td>${x.peak}h</td><td><button class="btn danger" data-id="${x.id}">Delete</button></td>`;$('logRows').appendChild(tr)});document.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>saveLogs(logs.filter(x=>x.id!==b.dataset.id)));const c=logs.length===0?'none':logs.length<3?'low':logs.length<7?'medium':'high';$('confidence').textContent='Calibration confidence: '+c+' ('+logs.length+' observation'+(logs.length===1?'':'s')+')';}
-$('saveLog').onclick=()=>{const entry={id:String(Date.now()),fedAt:$('logFedAt').value,ratio:num('logRatio'),temp:num('logTemp'),peak:num('logPeak'),flour:$('logFlour').value,notes:$('logNotes').value.trim()};if(!entry.fedAt||!(entry.ratio>0)||!(entry.temp>=4&&entry.temp<=40)||!(entry.peak>0)){ $('logError').textContent='Complete the date, ratio, temperature and observed peak time.';return;} $('logError').textContent='';saveLogs([...getLogs(),entry]);['logRatio','logTemp','logPeak','logNotes'].forEach(id=>$(id).value='');};
-$('clearLogs').onclick=()=>{if(confirm('Delete all on-device starter observations?'))saveLogs([])};
-$('exportLogs').onclick=()=>{const blob=new Blob([JSON.stringify(getLogs(),null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='starter-logbook.json';a.click();URL.revokeObjectURL(a.href);};
-
-const next=new Date(Date.now()+24*3600000);next.setMinutes(0,0,0);$('readyAt').value=new Date(next-next.getTimezoneOffset()*60000).toISOString().slice(0,16);$('logFedAt').value=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16);
-renderLogs();setCalcMode(1);calculateStarter();
+async function boot(){try{await openDB();$("syncBadge").textContent="IndexedDB ready";const choice=localStorage.getItem("sc-contribute");if(!choice)$("consentModal").classList.add("open");else $("lContribute").checked=choice==="yes";const now=new Date(),tom=new Date(Date.now()+86400000);$("lFed").value=new Date(now-now.getTimezoneOffset()*60000).toISOString().slice(0,16);$("sReady").value=new Date(tom-tom.getTimezoneOffset()*60000).toISOString().slice(0,16);calcInitial();calcRatio();calcCustom();await renderLogs();await loadCommunity();await syncPending()}catch(e){$("syncBadge").textContent="Data layer error";console.error(e)}} boot();
 </script>
 </body>
 </html>
