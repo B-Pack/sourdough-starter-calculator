@@ -1,0 +1,238 @@
+// ══════════════════════════════════════════════════════════
+//  STARTER CALCULATOR
+// ══════════════════════════════════════════════════════════
+
+var _starterCalcMode = 1;         // Default: Tab 1 — Initial Starter
+var _starterPrepRequired = 0;
+var _starterCalcCollapsed = null; // null = use device default
+
+(function initStarterCalcCollapse() {
+  const isMobile = window.matchMedia('(max-width:768px)').matches;
+  _starterCalcCollapsed = isMobile;
+  _applyStarterCalcCollapse();
+  if (typeof setStarterMode === 'function') setStarterMode(1);
+})();
+
+function _applyStarterCalcCollapse() {
+  const body    = document.getElementById('starter-calc-body');
+  const chevron = document.getElementById('starter-calc-chevron');
+  if (!body) return;
+  body.style.display = _starterCalcCollapsed ? 'none' : 'block';
+  if (chevron) chevron.textContent = _starterCalcCollapsed ? '▸' : '▾';
+}
+
+function toggleStarterCalc() {
+  _starterCalcCollapsed = !_starterCalcCollapsed;
+  _applyStarterCalcCollapse();
+}
+
+function setStarterMode(mode) {
+  _starterCalcMode = mode;
+  [1,2,3].forEach(m => {
+    const tab = document.getElementById('starter-tab-' + m);
+    if (tab) tab.classList.toggle('active', m === mode);
+  });
+
+  const hints = {
+    1: 'I know how much starter I have',
+    2: 'I know what ratio I want to feed',
+    3: 'I want to calculate with specific values'
+  };
+  const hint = document.getElementById('starter-mode-hint');
+  if (hint) hint.textContent = hints[mode] || '';
+
+  // Show/hide input fields per mode
+  const show = id => { const el = document.getElementById(id); if (el) el.style.display = ''; };
+  const hide = id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; };
+
+  if (mode === 1) {
+    show('starter-field-x'); hide('starter-field-a'); show('starter-field-b'); hide('starter-field-rsy');
+    _resetCustomFieldLocks(); _clearInputVal('starter-input-a'); _clearInputVal('starter-input-b'); _clearInputVal('starter-input-rsy');
+  } else if (mode === 2) {
+    hide('starter-field-x'); show('starter-field-a'); show('starter-field-b'); hide('starter-field-rsy');
+    _resetCustomFieldLocks(); _clearInputVal('starter-input-x'); _clearInputVal('starter-input-b'); _clearInputVal('starter-input-rsy');
+  } else { // Custom
+    show('starter-field-x'); show('starter-field-a'); show('starter-field-b'); show('starter-field-rsy');
+    _clearInputVal('starter-input-b'); // clear any auto-filled value from modes 1/2
+  }
+
+  updateStarterCalc();
+}
+
+function _clearInputVal(id) {
+  const el = document.getElementById(id);
+  if (el) { el.value = ''; el.disabled = false; el.removeAttribute('data-auto'); }
+}
+
+function updateStarterCalc() {
+  const mode   = _starterCalcMode;
+  const notice = document.getElementById('starter-no-starter-notice');
+  const set    = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+
+  if (mode === 3) { _updateCustomCalc(); if (notice) notice.style.display = 'none'; return; }
+
+  // Modes 1 & 2: prep day's starter requirement IS the RSY
+  const RSY = _starterPrepRequired;
+  if (RSY <= 0) {
+    if (notice) { notice.style.display = 'block'; notice.innerHTML = '⚠️ No starter required for the selected prep day. Switch to <strong>Custom</strong> mode for a standalone calculation.'; }
+    _clearStarterResults(); return;
+  }
+  if (notice) notice.style.display = 'none';
+
+  // Determine buffer: use manual override if user typed a value, else auto-calculate
+  const bInput = document.getElementById('starter-input-b');
+  const bIsAuto = !bInput || bInput.dataset.auto === 'true' || !bInput.value.trim();
+  const bVal = bIsAuto ? NaN : parseFloat(bInput.value);
+  const hasManualB = !isNaN(bVal) && bVal >= 0;
+
+  let B, TSY;
+  if (hasManualB) {
+    B   = bVal;
+    TSY = RSY + B;
+  } else {
+    B   = Math.max(RSY * 0.035, 30);
+    TSY = RSY + B;
+    // Auto-fill the field so the user can see the calculated value
+    if (bInput) { bInput.value = B.toFixed(1); bInput.dataset.auto = 'true'; }
+  }
+
+  if (mode === 1) {
+    // User enters X → solve for A
+    const X = parseFloat(document.getElementById('starter-input-x')?.value);
+    if (!X || X <= 0) { _clearStarterResults(); return; }
+    if (X >= TSY) {
+      if (notice) { notice.style.display = 'block'; notice.innerHTML = `⚠️ Your initial starter (${X.toFixed(1)}g) meets or exceeds the total required (${TSY.toFixed(1)}g). No additional feed needed — you already have enough.`; }
+      _clearStarterResults(); return;
+    }
+    const A = (TSY - X) / (2 * X);
+    const Y = A * X;
+    set('sr-x', X.toFixed(1) + 'g');
+    set('sr-y', Y.toFixed(1) + 'g');
+    set('sr-z', Y.toFixed(1) + 'g');
+    set('sr-buffer', B.toFixed(1) + 'g' + (hasManualB ? '' : ' (auto)'));
+    set('sr-rsy', RSY.toFixed(1) + 'g');
+    set('sr-total', TSY.toFixed(1) + 'g');
+    set('starter-ratio-display', '1 : ' + A.toFixed(2) + ' : ' + A.toFixed(2));
+  } else { // mode 2
+    // User enters A → solve for X
+    const A = parseFloat(document.getElementById('starter-input-a')?.value);
+    if (!A || A <= 0) { _clearStarterResults(); return; }
+    const X = TSY / (1 + 2 * A);
+    const Y = A * X;
+    set('sr-x', X.toFixed(1) + 'g');
+    set('sr-y', Y.toFixed(1) + 'g');
+    set('sr-z', Y.toFixed(1) + 'g');
+    set('sr-buffer', B.toFixed(1) + 'g' + (hasManualB ? '' : ' (auto)'));
+    set('sr-rsy', RSY.toFixed(1) + 'g');
+    set('sr-total', TSY.toFixed(1) + 'g');
+    set('starter-ratio-display', '1 : ' + A + ' : ' + A);
+  }
+}
+
+// Custom mode: free-form with smart field locking
+function _updateCustomCalc() {
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+
+  const xInput   = document.getElementById('starter-input-x');
+  const aInput   = document.getElementById('starter-input-a');
+  const rsyInput = document.getElementById('starter-input-rsy');
+  const bInput   = document.getElementById('starter-input-b');
+
+  // First unlock all so we can re-evaluate freely
+  _resetCustomFieldLocks();
+
+  // Read only non-disabled (user-entered) values
+  const xVal   = xInput   && !xInput.disabled   && xInput.value.trim()   ? parseFloat(xInput.value)   : NaN;
+  const aVal   = aInput   && !aInput.disabled   && aInput.value.trim()   ? parseFloat(aInput.value)   : NaN;
+  const rsyVal = rsyInput && !rsyInput.disabled && rsyInput.value.trim() ? parseFloat(rsyInput.value) : NaN;
+  const bVal   = bInput   && bInput.value.trim()                         ? parseFloat(bInput.value)   : NaN;
+
+  const hasX   = !isNaN(xVal)   && xVal   > 0;
+  const hasA   = !isNaN(aVal)   && aVal   > 0;
+  const hasRSY = !isNaN(rsyVal) && rsyVal > 0;
+  const hasB   = !isNaN(bVal)   && bVal   >= 0;
+
+  let X, A, RSY, B, TSY, lockedField = null;
+
+  if (hasX && hasA) {
+    X = xVal; A = aVal;
+    TSY = X * (1 + 2 * A);
+    if (hasB) {
+      B = bVal;
+      RSY = TSY - B;
+      if (RSY <= 0) { _clearStarterResults(); return; }
+    } else {
+      const rsyTry = TSY - 30;
+      RSY = (rsyTry > 0 && rsyTry < 857.14) ? rsyTry : TSY / 1.035;
+      B = TSY - RSY;
+    }
+    lockedField = 'rsy';
+  } else if (hasX && hasRSY) {
+    X = xVal; RSY = rsyVal;
+    B = hasB ? bVal : Math.max(RSY * 0.035, 30);
+    TSY = RSY + B;
+    if (X <= 0 || X >= TSY) { _clearStarterResults(); return; }
+    A = (TSY - X) / (2 * X);
+    lockedField = 'a';
+  } else if (hasRSY && hasA) {
+    RSY = rsyVal; A = aVal;
+    B = hasB ? bVal : Math.max(RSY * 0.035, 30);
+    TSY = RSY + B;
+    X = TSY / (1 + 2 * A);
+    lockedField = 'x';
+  } else {
+    _clearStarterResults(); return;
+  }
+
+  if (A <= 0 || X <= 0 || RSY <= 0) { _clearStarterResults(); return; }
+
+  const Y = A * X;
+
+  if (lockedField === 'rsy') _lockCustomField(rsyInput, RSY.toFixed(1));
+  if (lockedField === 'a')   _lockCustomField(aInput,   A.toFixed(2));
+  if (lockedField === 'x')   _lockCustomField(xInput,   X.toFixed(1));
+
+  set('sr-x', X.toFixed(1) + 'g');
+  set('sr-y', Y.toFixed(1) + 'g');
+  set('sr-z', Y.toFixed(1) + 'g');
+  set('sr-buffer', B.toFixed(1) + 'g' + (hasB ? '' : ' (auto)'));
+  set('sr-rsy', RSY.toFixed(1) + 'g');
+  set('sr-total', TSY.toFixed(1) + 'g');
+  set('starter-ratio-display', '1 : ' + A.toFixed(2) + ' : ' + A.toFixed(2));
+}
+
+function _lockCustomField(input, val) {
+  if (!input) return;
+  input.value    = val;
+  input.disabled = true;
+  input.closest('.starter-input-group')?.classList.add('starter-field-computed');
+}
+
+function _resetCustomFieldLocks() {
+  ['starter-input-x', 'starter-input-a', 'starter-input-rsy'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.disabled) {
+      el.value    = '';
+      el.disabled = false;
+      el.closest('.starter-input-group')?.classList.remove('starter-field-computed');
+    }
+  });
+}
+
+function _clearStarterResults() {
+  ['sr-x','sr-y','sr-z','sr-rsy','sr-buffer','sr-total','starter-ratio-display'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = '—';
+  });
+}
+
+function _updateStarterPrepRequired(ingTotals) {
+  let total = 0;
+  Object.values(ingTotals || {}).forEach(i => {
+    if (/^starter$/i.test(i.name)) total += (i.total || 0);
+  });
+  _starterPrepRequired = total;
+  updateStarterCalc();
+}
+
+</script>
