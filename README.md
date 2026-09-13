@@ -1,148 +1,49 @@
-# 🍞 Sourdough Companion v5.3
+# 🍞 Sourdough Companion v6.0
 
-A mobile-friendly sourdough starter calculator, peak-time planning tool, and offline-first starter logbook. The app is a single `index.html` file designed for free hosting on GitHub Pages.
+Sourdough Companion v6 is a single-file, offline-first fermentation intelligence platform for GitHub Pages. It combines personal starter records, Firestore community statistics, and predictive models.
 
-## Version 5.2 + 5.3 combined changes
+## V6 features
+- Multiple local starter profiles
+- Starter Timeline for feed, peak, bake/use, collapse, and note events
+- Feed Planning Assistant with ready, dough-mix, and bulk-fermentation targets
+- Starter Health Score, peak trend, consistency, and refrigeration recovery
+- Dynamic 0–100 confidence score
+- Most-likely peak plus 80% and 95% confidence windows
+- Community Insights using `communityStatistics`
+- Ratio presets on ratio-based tools only
+- IndexedDB migration that preserves existing stores and adds profile, timeline, and scheduler stores
+- Reusable `buildObservationPayload()`
+- Anonymous validation before upload
 
-- Removed the difficult-to-measure rise multiplier from the logbook and anonymous contribution schema.
-- Added separate flour choices for bleached all-purpose and unbleached all-purpose flour.
-- Renamed the bread flour option to **Bread / baker's flour**. Baker's flour should be recorded using this option.
-- Added a **Keep flour and water ratios symmetrical** option to Smart Custom.
-- Symmetrical ratios are enabled by default and produce a 100% hydration feed.
-- Unchecking the option unlocks independent flour and water ratios such as `1:2:3`.
+## Storage
+IndexedDB database: `SourdoughCompanion`, version 8. Existing `starterLogs`, `pendingUploads`, and `communityCache` data are preserved. New stores are `starterProfiles`, `timelineEvents`, and `schedulerTargets`. Existing logs without a `starterId` remain compatible and can be treated as Main Starter data during migration.
 
-## Main pages
+## Firebase
+Project: `sourdough-companion-167b0`
 
-### Starter Calculator
+Raw anonymous submissions are created in `communityObservations`. Community dashboards read `communityStatistics`. The public app does not update aggregate documents.
 
-Contains three tabs:
-
-1. **Initial Starter** calculates a feed from the starter available, recipe requirement, reserve, and desired hydration.
-2. **Feed Ratio** calculates starter, flour, and water from a specified `1:F:W` ratio.
-3. **Smart Custom** solves a missing value and supports both symmetrical and non-symmetrical ratios.
-
-The automatic reserve is 3.5% of the recipe requirement or 30g, whichever is greater. A manual reserve can be entered instead.
-
-Hydration is calculated as:
-
-```text
-Hydration % = water ratio ÷ flour ratio × 100
+## communityStatistics document
+```json
+{
+  "flourRatio": 5,
+  "waterRatio": 5,
+  "hydration": 100,
+  "temperatureBucket": 22,
+  "flour": "bread",
+  "starterCondition": "strong",
+  "samples": 251,
+  "averagePeak": 8.2,
+  "standardDeviation": 0.8,
+  "version": 1
+}
 ```
 
-### Starter Insights
+## Deployment
+Place `index.html` and `README.md` in the repository root and deploy the root of the main branch with GitHub Pages.
 
-Contains three tabs:
-
-- **Peak Estimator** provides a timing range using ratio, hydration, temperature, flour, starter condition, and nearby community observations.
-- **Feed Scheduler** works backward from the desired ready time.
-- **Starter Logbook** stores observations locally and can optionally contribute starter-only data to Firestore.
-- **Community Insights** displays sample totals, common ratios and hydration levels, and average peak timing by flour and temperature.
-
-## Flour categories
-
-- Bleached all-purpose
-- Unbleached all-purpose
-- Bread / baker's flour
-- Mixed white and whole grain
-- Whole wheat
-- Rye-heavy
-
-For this app, baker's flour is grouped with bread flour.
-
-## Local storage and privacy
-
-Full logbook entries are stored locally in IndexedDB in the current browser and device. Notes and local identifiers are not included in anonymous Firestore contributions.
-
-Clearing browser/site data, using private browsing, or switching devices can make local records unavailable. Use **Export JSON** to create backups and **Import JSON** to restore them.
-
-## Anonymous community contributions
-
-When **Contribute anonymously** is checked, the app submits:
-
-```text
-flourRatio
-waterRatio
-hydration
-temperature
-flour
-starterCondition
-peakHours
-appSource
-contributeVersion
-submittedByVersion
-version
-createdAt
-```
-
-The app does not upload the notes field or local logbook identifier.
-
-If the device is offline, the contribution is placed in an IndexedDB upload queue and can be retried later.
-
-## Firebase project
-
-Version 5.1 is configured for the `sourdough-companion-167b0` Firebase project and uses the `communityObservations` Firestore collection.
-
-The current security model allows anonymous reads and document creation, while preventing updates and deletions. Before broad public promotion, strengthen Firestore rules with field allowlists, type checks, and reasonable numeric ranges.
-
-## GitHub Pages deployment
-
-1. Rename the downloaded application file to `index.html`.
-2. Place `index.html` and `README.md` in the repository root.
-3. Open repository **Settings**, then **Pages**.
-4. Choose **Deploy from a branch**.
-5. Select the `main` branch and `/ (root)`.
-6. Save the Pages configuration.
-
-Repository layout:
-
-```text
-sourdough-companion/
-├── index.html
-└── README.md
-```
-
-## Recommended tests
-
-### Symmetrical Smart Custom
-
-1. Keep **Keep flour and water ratios symmetrical** checked.
-2. Enter a flour ratio.
-3. Confirm the water ratio mirrors it and is visually marked as linked.
-4. Confirm hydration is 100%.
-
-### Non-symmetrical Smart Custom
-
-1. Uncheck the symmetrical option.
-2. Enter a ratio such as `1:2:3`.
-3. Confirm hydration is 150%.
-4. Leave one supported value blank and confirm Smart Custom solves it.
-
-### Logbook and Firebase
-
-1. Save a local observation with anonymous contribution disabled.
-2. Confirm the row shows `Local`.
-3. Save another with contribution enabled.
-4. Confirm the row becomes `Synced` and a Firestore document appears.
-5. Test while offline and verify the contribution shows as `Queued` until retry.
+## Privacy
+Profiles, notes, timelines, and scheduler targets remain on-device. Only the established anonymous observation schema is uploaded. No accounts or authentication are used.
 
 ## Disclaimer
-
-Peak timing is an estimate. Starter culture, feeding history, actual dough temperature, flour, hydration, and environmental changes all affect fermentation. Check starter expansion, bubbles, aroma, and the shape of the surface before use.
-
-
-### Community statistics
-
-Version 5.3 expects trusted aggregate documents in `communityStatistics` with `flourRatio`, `waterRatio`, `hydration`, `temperatureBucket`, `flour`, `samples`, `averagePeak`, and `standardDeviation`. Anonymous browsers should have read-only access to this collection. Aggregates should be produced by a trusted backend or administrator process, not by the public web app.
-
-### Data quality limits
-
-Uploads are rejected when peak time is outside 1–72 hours, hydration is outside 20–300%, temperature is outside 0–50°C, or either feed ratio is not positive.
-
-### V5.3 tests
-
-- Test every preset in each ratio-aware tool.
-- Disable symmetrical mode and verify an advanced ratio such as 1:5:3.
-- Add multiple local observations and verify Personal Starter Profile statistics.
-- Verify predictions show personal, community, and generic weighting.
-- Add an aggregate document and verify Community Insights.
-- Test invalid observations at every validation boundary.
+Predictions and health scores are planning aids. Confirm readiness from starter expansion, bubbles, aroma, and surface shape.
